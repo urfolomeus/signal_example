@@ -13,15 +13,5 @@
 
   <body>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-
-    <script>
-      var seatSaverApp = Elm.fullscreen(Elm.SeatSaver, {saveSeat: 4});
-
-      seatSaverApp.ports.reserveSeat.subscribe(yello);
-
-      function yello(message) {
-        console.log(message);
-      }
-    </script>
   </body>
 </html>

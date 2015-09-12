@@ -3,6 +3,7 @@ defmodule SignalExample.UserSocket do
 
   ## Channels
   # channel "rooms:*", SignalExample.RoomChannel
+  channel "seats:planner", SignalExample.SeatChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

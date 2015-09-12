@@ -51,12 +51,39 @@ let socket = new Socket("/socket")
 // Finally, pass the token on connect as below. Or remove it
 // from connect if you don't care about authentication.
 
-socket.connect({token: window.userToken})
+socket.connect({})
 
 // Now that you are connected, you can join channels with a topic:
-let channel = socket.channel("topic:subtopic", {})
+let channel = socket.channel("seats:planner", {})
 channel.join()
-  .receive("ok", resp => { console.log("Joined successfully", resp) })
+  .receive("ok", resp => {
+    console.log("Joined successfully")
+  })
   .receive("error", resp => { console.log("Unable to join", resp) })
+
+var seatSaverApp = Elm.fullscreen(Elm.SeatSaver, {seats: [], updateSeat: 0});
+
+var seats = [{seatNo: 1, occupied: false}, {seatNo: 2, occupied: false}, {seatNo: 3, occupied: false}]
+seatSaverApp.ports.seats.send(seats);
+seatSaverApp.ports.reserveSeat.subscribe(yello);
+
+function yello(seat) {
+  if(!seat.occupied) {
+    channel.push("request_seat", {seatNo: seat.seatNo});
+  } else {
+    channel.push("unrequest_seat", {seatNo: seat.seatNo});
+
+  }
+};
+
+channel.on("requested", payload => {
+  console.log('requested seat', payload);
+  seatSaverApp.ports.updateSeat.send(payload.seatNo);
+});
+
+channel.on("unrequested", payload => {
+  console.log('unrequested seat', payload);
+  seatSaverApp.ports.updateSeat.send(payload.seatNo);
+});
 
 export default socket

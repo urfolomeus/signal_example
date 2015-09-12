@@ -5,48 +5,29 @@ import Html.Events exposing (..)
 
 
 main =
-  Signal.map  (view actions.address) model
+  Signal.map (view seatsToReserve.address) model
 
 
-port saveSeat : Signal Int
+port seats : Signal (List Seat)
 
 
-port reserveSeat : Signal String
+port updateSeat : Signal Int
+
+
+port reserveSeat : Signal Seat
 port reserveSeat =
-  Signal.map toString model
+  seatsToReserve.signal
 
 
 -- MODEL
 
 type alias Seat =
-  { seatNo: Int
-  , occupied: Bool
+  { seatNo : Int
+  , occupied : Bool
   }
 
 
-type alias Model =
-  { seats : List Seat
-  , nextSeatNo : Int
-  }
-
-
-newSeat : Int -> Bool -> Seat
-newSeat number occupied =
-  { seatNo = number
-  , occupied = occupied
-  }
-
-
-initialModel : Model
-initialModel =
-  { seats =
-    [ (newSeat 1 False)
-    , (newSeat 2 True)
-    , (newSeat 3 False)
-    ]
-  , nextSeatNo = 4
-  }
-
+type alias Model = List Seat
 
 
 -- UPDATE
@@ -54,6 +35,7 @@ initialModel =
 type Action
   = NoOp
   | Mark Int
+  | Add (List Seat)
 
 
 update : Action -> Model -> Model
@@ -67,34 +49,43 @@ update action model =
         updateSeat s =
           if s.seatNo == seatNo then { s | occupied <- (not s.occupied) } else s
       in
-        { model | seats <- List.map updateSeat model.seats }
+        List.map updateSeat model
+
+    Add seats ->
+      List.append seats model
 
 
 model : Signal Model
 model =
-  Signal.foldp update initialModel allSignals
+  Signal.foldp update [] allSignals
 
 
-allSignals: Signal Action
-allSignals = Signal.merge actions.signal inputs
+allSignals : Signal Action
+allSignals =
+  Signal.merge seatUpdates addSeats
 
 
-actions : Signal.Mailbox Action
-actions =
-  Signal.mailbox NoOp
+seatUpdates : Signal Action
+seatUpdates =
+  Signal.map (\seatNo -> Mark seatNo) updateSeat
 
 
-inputs : Signal Action
-inputs =
-    Signal.map (\seatNo -> Mark seatNo) saveSeat
+addSeats : Signal Action
+addSeats =
+  Signal.map (\seats -> Add seats) seats
+
+
+seatsToReserve : Signal.Mailbox Seat
+seatsToReserve =
+  Signal.mailbox (Seat 0 False)
 
 
 -- VIEW
 
-view : Signal.Address Action -> Model -> Html
+view : Signal.Address Seat -> Model -> Html
 view address model =
-  ul [ ] (List.map (seatItem address) model.seats)
+  ul [ ] (List.map (seatItem address) model)
 
 
 seatItem address seat =
-  li [ onClick address (Mark seat.seatNo) ] [ text (toString seat)]
+  li [ onClick address seat ] [ text (toString seat)]
