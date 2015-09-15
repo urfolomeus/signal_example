@@ -65,9 +65,9 @@ var seatSaverApp = Elm.fullscreen(Elm.SeatSaver, {seats: [], updateSeat: 0});
 
 var seats = [{seatNo: 1, occupied: false}, {seatNo: 2, occupied: false}, {seatNo: 3, occupied: false}]
 seatSaverApp.ports.seats.send(seats);
-seatSaverApp.ports.reserveSeat.subscribe(yello);
+seatSaverApp.ports.reserveSeat.subscribe(reserveSeat);
 
-function yello(seat) {
+function reserveSeat(seat) {
   if(!seat.occupied) {
     channel.push("request_seat", {seatNo: seat.seatNo});
   } else {
